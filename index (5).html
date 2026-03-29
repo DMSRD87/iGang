@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>iGang — Digital Tally Book</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f2f5;color:#1a1a2e;min-height:100vh}
+button{cursor:pointer;border:none;background:none;font-family:inherit}
+input,select,textarea{font-family:inherit}
+.h-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.h-scroll::-webkit-scrollbar{height:4px}
+.h-scroll::-webkit-scrollbar-thumb{background:#ccc;border-radius:2px}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-thumb{background:#ccc;border-radius:3px}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useMemo}=React;
+
+const DAYS=['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+const DAY_SHORT=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const DATES=['23/3','24/3','25/3','26/3','27/3','28/3','29/3'];
+const CLASSES=['Ewes','Wethers','Rams','Lambs','Other'];
+const ADMIN_PIN='1234';
+
+const SHED={contractor:'Woolaway Shearing Co.',leader:'Lachlan Holmes',property:'Mueller',address:'Eyre Peninsula SA',start:'23/03/2026'};
+
+const SHEARERS=[
+  {id:'s1',name:'Hayden'},
+  {id:'s2',name:'Gonz'},
+  {id:'s3',name:'Nathan B'},
+  {id:'s4',name:'Nathan'},
+  {id:'s5',name:'LH'},
+];
+const STAFF=[{id:'st1',name:'Connor',role:'Wool Handler'}];
+const INIT_RATES={shearing:4.80,crutching:1.50};
+const INIT_TRAVEL={s1:45,s2:45,s3:45,s4:45,s5:0,st1:50};
+
+const mkDay=(runs=[],staff={},notes='',travel={})=>({runs,staff,notes,travel});
+
+// Demo data: 4 shearers averaging 55/run across 4 runs = 220/day each
+const INIT_WEEK={
+  monday:mkDay([
+    {id:'r1',num:1,counts:[
+      {id:'c1',cls:'Ewes',job:'Shearing',desc:'',counts:{s1:55,s2:54,s3:56,s4:55,s5:0}},
+    ]},
+    {id:'r2',num:2,counts:[
+      {id:'c2',cls:'Ewes',job:'Shearing',desc:'',counts:{s1:56,s2:55,s3:54,s4:55,s5:0}},
+    ]},
+    {id:'r3',num:3,counts:[
+      {id:'c3',cls:'Lambs',job:'Shearing',desc:'',counts:{s1:54,s2:56,s3:55,s4:55,s5:0}},
+    ]},
+    {id:'r4',num:4,counts:[
+      {id:'c4',cls:'Lambs',job:'Shearing',desc:'',counts:{s1:55,s2:55,s3:55,s4:55,s5:0}},
+    ]},
+  ],{st1:{runs:4}},'Good run. All four shearers consistent all day.',{s1:45,s2:45,s3:45,s4:45,s5:0,st1:50}),
+  tuesday:mkDay([
+    {id:'r1t',num:1,counts:[
+      {id:'c1t',cls:'Ewes',job:'Shearing',desc:'',counts:{s1:58,s2:52,s3:57,s4:53,s5:0}},
+    ]},
+    {id:'r2t',num:2,counts:[
+      {id:'c2t',cls:'Ewes',job:'Shearing',desc:'',counts:{s1:54,s2:56,s3:55,s4:55,s5:0}},
+    ]},
+    {id:'r3t',num:3,counts:[
+      {id:'c3t',cls:'Wethers',job:'Shearing',desc:'',counts:{s1:53,s2:57,s3:54,s4:56,s5:0}},
+    ]},
+    {id:'r4t',num:4,counts:[
+      {id:'c4t',cls:'Wethers',job:'Shearing',desc:'',counts:{s1:55,s2:54,s3:56,s4:55,s5:0}},
+    ]},
+  ],{st1:{runs:4}},'',{s1:45,s2:45,s3:45,s4:45,s5:0,st1:50}),
+  wednesday:mkDay(),
+  thursday:mkDay([
+    {id:'r1th',num:1,counts:[
+      {id:'c1th',cls:'Lambs',job:'Shearing',desc:'',counts:{s1:160,s2:146,s3:190,s4:144,s5:0}},
+    ]},
+  ],{st1:{runs:2}},'',{s1:45,s2:45,s3:45,s4:45,s5:0,st1:50}),
+  friday:mkDay(),
+  saturday:mkDay(),
+  sunday:mkDay(),
+};
+
+function uid(){return Math.random().toString(36).slice(2,8);}
+
+function getShearerTotals(week,sid,dayKey){
+  const dayIdx=DAYS.indexOf(dayKey);
+  let shBF=0,crBF=0,shDay=0,crDay=0;
+  DAYS.forEach((d,i)=>{
+    if(i>dayIdx)return;
+    let sh=0,cr=0;
+    (week[d].runs||[]).forEach(r=>r.counts.forEach(c=>{
+      const v=Number(c.counts[sid]||0);
+      if(c.job==='Shearing')sh+=v;else cr+=v;
+    }));
+    if(i<dayIdx){shBF+=sh;crBF+=cr;}
+    else{shDay=sh;crDay=cr;}
+  });
+  return{
+    shearing:{bf:shBF,day:shDay,tot:shBF+shDay},
+    crutching:{bf:crBF,day:crDay,tot:crBF+crDay},
+  };
+}
+
+function getStaffTotals(week,stid,dayKey){
+  const dayIdx=DAYS.indexOf(dayKey);
+  let bf=0,day=0;
+  DAYS.forEach((d,i)=>{
+    if(i>dayIdx)return;
+    const v=Number((week[d].staff||{})[stid]?.runs||0);
+    if(i<dayIdx)bf+=v;else day=v;
+  });
+  return{bf,day,tot:bf+day};
+}
+
+function exportCSV(week,rates,travel){
+  const rows=[['Name','Role','Shearing Total','Crutching Total','Travel']];
+  SHEARERS.forEach(s=>{
+    let sh=0,cr=0;
+    DAYS.forEach(d=>{
+      (week[d].runs||[]).forEach(r=>r.counts.forEach(c=>{
+        const v=Number(c.counts[s.id]||0);
+        if(c.job==='Shearing')sh+=v;else cr+=v;
+      }));
+    });
+    rows.push([s.name,'Shearer',sh,cr,Number(travel[s.id]||0)]);
+  });
+  STAFF.forEach(st=>{
+    let runs=0;
+    DAYS.forEach(d=>{runs+=Number((week[d].staff||{})[st.id]?.runs||0);});
+    rows.push([st.name,st.role,'-','-',Number(travel[st.id]||0)]);
+  });
+  return rows.map(r=>r.join(',')).join('\n');
+}
+
+const C={
+  navy:'#1a3a5c',navyDark:'#0f2236',
+  amber:'#e8a020',
+  green:'#166534',greenBg:'#dcfce7',
+  red:'#dc2626',
+  blue:'#1d4ed8',blueBg:'#dbeafe',
+  crutch:'#d97706',crutchBg:'#fef3c7',
+  gray:'#6b7280',border:'#e5e7eb',
+  card:'#ffffff',bg:'#f0f2f5',
+};
+
+function Tag({type}){
+  const s=type==='Shearing'?{color:C.blue,bg:C.blueBg}:{color:C.crutch,bg:C.crutchBg};
+  return<span style={{background:s.bg,color:s.color,fontSize:11,fontWeight:700,padding:'2px 8px',borderRadius:12}}>{type}</span>;
+}
+
+function Card({children,style={}}){
+  return<div style={{background:C.card,borderRadius:14,border:`1px solid ${C.border}`,padding:'16px 18px',...style}}>{children}</div>;
+}
+
+function SectionLabel({children}){
+  return<p style={{fontSize:11,fontWeight:700,color:C.gray,textTransform:'uppercase',letterSpacing:1.2,marginBottom:10}}>{children}</p>;
+}
+
+// ── Count Row — horizontal scroll shearer grid ─────────────
+function CountRow({count,shearers,onChange,onDelete}){
+  const mobTotal=shearers.reduce((s,sh)=>s+Number(count.counts[sh.id]||0),0);
+
+  return(
+    <div style={{background:'#f9fafb',borderRadius:10,padding:12,marginBottom:8,border:`1px solid ${C.border}`}}>
+      {/* Count header */}
+      <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10,flexWrap:'wrap'}}>
+        <Tag type={count.job}/>
+        <select value={count.cls} onChange={e=>onChange({...count,cls:e.target.value})}
+          style={{padding:'4px 8px',borderRadius:6,border:`1px solid ${C.border}`,fontSize:13,fontWeight:600,background:'#fff'}}>
+          {CLASSES.map(c=><option key={c}>{c}</option>)}
+        </select>
+        {count.job==='Crutching'&&(
+          <input value={count.desc} onChange={e=>onChange({...count,desc:e.target.value})}
+            placeholder="e.g. Ewe FC with wig"
+            style={{flex:1,minWidth:130,padding:'4px 8px',borderRadius:6,border:`1px solid ${C.border}`,fontSize:13}}/>
+        )}
+        <button onClick={onDelete} style={{marginLeft:'auto',color:C.red,fontSize:18,lineHeight:1,padding:'0 4px'}}>×</button>
+      </div>
+
+      {/* Horizontal scroll shearer inputs */}
+      <div className="h-scroll">
+        <table style={{borderCollapse:'collapse',minWidth:'100%'}}>
+          <thead>
+            <tr>
+              {shearers.map(sh=>(
+                <th key={sh.id} style={{padding:'4px 8px',textAlign:'center',fontSize:11,fontWeight:700,color:C.gray,whiteSpace:'nowrap',minWidth:70}}>{sh.name}</th>
+              ))}
+              <th style={{padding:'4px 10px',textAlign:'center',fontSize:11,fontWeight:700,color:C.navy,whiteSpace:'nowrap',minWidth:70,borderLeft:`2px solid ${C.border}`}}>MOB TOTAL</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              {shearers.map(sh=>(
+                <td key={sh.id} style={{padding:'4px 6px',textAlign:'center'}}>
+                  <input type="number" min="0"
+                    value={count.counts[sh.id]===0?'':count.counts[sh.id]||''}
+                    onChange={e=>onChange({...count,counts:{...count.counts,[sh.id]:e.target.value===''?0:Number(e.target.value)}})}
+                    style={{width:60,padding:'8px 4px',borderRadius:8,border:`1px solid ${C.border}`,fontSize:18,textAlign:'center',fontWeight:700,background:'#fff'}}/>
+                </td>
+              ))}
+              <td style={{padding:'4px 8px',textAlign:'center',borderLeft:`2px solid ${C.border}`}}>
+                <div style={{background:C.navy,borderRadius:8,padding:'8px 10px',display:'inline-block',minWidth:60}}>
+                  <span style={{color:'#fff',fontSize:18,fontWeight:800}}>{mobTotal}</span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+// ── Run Card ───────────────────────────────────────────────
+function RunCard({run,shearers,onUpdate,onDelete}){
+  const [collapsed,setCollapsed]=useState(false);
+  const runTotal=run.counts.reduce((s,c)=>s+shearers.reduce((ss,sh)=>ss+Number(c.counts[sh.id]||0),0),0);
+
+  const addCount=(job)=>{
+    const newCount={id:uid(),cls:'Ewes',job,desc:'',counts:Object.fromEntries(shearers.map(s=>[s.id,0]))};
+    onUpdate({...run,counts:[...run.counts,newCount]});
+  };
+  const updateCount=(id,u)=>onUpdate({...run,counts:run.counts.map(c=>c.id===id?u:c)});
+  const deleteCount=(id)=>onUpdate({...run,counts:run.counts.filter(c=>c.id!==id)});
+
+  return(
+    <div style={{background:'#fff',borderRadius:12,border:`1px solid ${C.border}`,marginBottom:12,overflow:'hidden'}}>
+      <div style={{display:'flex',alignItems:'center',gap:10,padding:'12px 14px',background:C.navy,cursor:'pointer'}} onClick={()=>setCollapsed(c=>!c)}>
+        <div style={{width:28,height:28,borderRadius:8,background:C.amber,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:800,fontSize:14,color:'#fff',flexShrink:0}}>{run.num}</div>
+        <span style={{color:'#fff',fontWeight:700,fontSize:15}}>Run {run.num}</span>
+        <span style={{color:'#93c5fd',fontSize:12}}>{run.counts.length} count{run.counts.length!==1?'s':''}</span>
+        <div style={{marginLeft:'auto',display:'flex',alignItems:'center',gap:8}}>
+          <span style={{background:'rgba(255,255,255,0.15)',color:'#fff',fontSize:13,fontWeight:700,padding:'3px 10px',borderRadius:20}}>{runTotal} head</span>
+          <button onClick={e=>{e.stopPropagation();onDelete();}} style={{color:'rgba(255,255,255,0.4)',fontSize:18}}>×</button>
+          <span style={{color:'rgba(255,255,255,0.5)',fontSize:13}}>{collapsed?'▼':'▲'}</span>
+        </div>
+      </div>
+      {!collapsed&&(
+        <div style={{padding:14}}>
+          {run.counts.map(c=>(
+            <CountRow key={c.id} count={c} shearers={shearers}
+              onChange={u=>updateCount(c.id,u)}
+              onDelete={()=>deleteCount(c.id)}/>
+          ))}
+          <div style={{display:'flex',gap:8,marginTop:6}}>
+            <button onClick={()=>addCount('Shearing')} style={{flex:1,padding:'8px 0',borderRadius:8,border:`1px dashed ${C.blue}`,fontSize:13,fontWeight:600,color:C.blue,background:C.blueBg}}>+ Shearing count</button>
+            <button onClick={()=>addCount('Crutching')} style={{flex:1,padding:'8px 0',borderRadius:8,border:`1px dashed ${C.crutch}`,fontSize:13,fontWeight:600,color:C.crutch,background:C.crutchBg}}>+ Crutching count</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Shearer Totals ─────────────────────────────────────────
+function ShearerTotalsCard({week,dayKey}){
+  return(
+    <Card style={{marginBottom:12}}>
+      <SectionLabel>Shearer totals — {DAY_SHORT[DAYS.indexOf(dayKey)]}</SectionLabel>
+      <div className="h-scroll">
+        <table style={{borderCollapse:'collapse',minWidth:'100%',fontSize:13}}>
+          <thead>
+            <tr style={{background:'#f9fafb'}}>
+              <th style={{padding:'8px 12px',textAlign:'left',fontWeight:700,color:C.gray,borderBottom:`1px solid ${C.border}`,whiteSpace:'nowrap',position:'sticky',left:0,background:'#f9fafb',zIndex:1}}>Shearer</th>
+              {['SH BF','SH Day','SH Tot','CR BF','CR Day','CR Tot'].map(h=>(
+                <th key={h} style={{padding:'8px 14px',textAlign:'center',fontWeight:600,color:C.gray,borderBottom:`1px solid ${C.border}`,fontSize:11,whiteSpace:'nowrap',minWidth:64}}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {SHEARERS.map((s,i)=>{
+              const t=getShearerTotals(week,s.id,dayKey);
+              const hasData=t.shearing.tot>0||t.crutching.tot>0;
+              return(
+                <tr key={s.id} style={{background:i%2===0?'#fff':'#fafafa',opacity:hasData?1:0.35}}>
+                  <td style={{padding:'10px 12px',fontWeight:700,whiteSpace:'nowrap',position:'sticky',left:0,background:i%2===0?'#fff':'#fafafa',zIndex:1}}>{s.name}</td>
+                  <td style={{padding:'10px 14px',textAlign:'center',color:C.gray}}>{t.shearing.bf||'—'}</td>
+                  <td style={{padding:'10px 14px',textAlign:'center',fontWeight:700,color:C.blue}}>{t.shearing.day||'—'}</td>
+                  <td style={{padding:'10px 14px',textAlign:'center',fontWeight:800,color:C.navy,fontSize:15}}>{t.shearing.tot||'—'}</td>
+                  <td style={{padding:'10px 14px',textAlign:'center',color:C.gray}}>{t.crutching.bf||'—'}</td>
+                  <td style={{padding:'10px 14px',textAlign:'center',fontWeight:700,color:C.crutch}}>{t.crutching.day||'—'}</td>
+                  <td style={{padding:'10px 14px',textAlign:'center',fontWeight:800,color:C.navy,fontSize:15}}>{t.crutching.tot||'—'}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      <p style={{fontSize:11,color:'#ccc',marginTop:8}}>SH = Shearing · CR = Crutching · BF = Brought Fwd · Tot = To Date</p>
+    </Card>
+  );
+}
+
+// ── Shed Staff ─────────────────────────────────────────────
+function ShedStaffCard({week,dayKey,setWeek,travel}){
+  const day=week[dayKey];
+  const updateRuns=(stid,val)=>setWeek(w=>({...w,[dayKey]:{...w[dayKey],staff:{...w[dayKey].staff,[stid]:{...w[dayKey].staff[stid],runs:val}}}}));
+
+  return(
+    <Card style={{marginBottom:12}}>
+      <SectionLabel>Shed staff</SectionLabel>
+      {STAFF.map(st=>{
+        const tots=getStaffTotals(week,st.id,dayKey);
+        return(
+          <div key={st.id} style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap',padding:'10px 0',borderBottom:`1px solid #f3f4f6`}}>
+            <div style={{width:36,height:36,borderRadius:'50%',background:C.navy,display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',fontWeight:700,fontSize:14,flexShrink:0}}>{st.name[0]}</div>
+            <div style={{flex:1,minWidth:80}}>
+              <p style={{fontWeight:700,fontSize:14}}>{st.name}</p>
+              <p style={{fontSize:12,color:C.gray}}>{st.role}</p>
+            </div>
+            <div style={{display:'flex',alignItems:'center',gap:6,flexWrap:'wrap'}}>
+              <div style={{display:'flex',alignItems:'center',gap:6}}>
+                <span style={{fontSize:12,color:C.gray}}>Runs today:</span>
+                <input type="number" min="0" max="20"
+                  value={day.staff[st.id]?.runs||''}
+                  onChange={e=>updateRuns(st.id,e.target.value)}
+                  style={{width:54,padding:'6px 8px',borderRadius:8,border:`1px solid ${C.border}`,fontSize:16,textAlign:'center',fontWeight:700}}/>
+              </div>
+              <div className="h-scroll" style={{maxWidth:'100%'}}>
+                <table style={{borderCollapse:'collapse',fontSize:12}}>
+                  <thead>
+                    <tr>
+                      {['BF','Today','To Date','Travel'].map(h=><th key={h} style={{padding:'2px 10px',textAlign:'center',color:C.gray,fontWeight:600,whiteSpace:'nowrap'}}>{h}</th>)}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td style={{padding:'4px 10px',textAlign:'center',color:C.gray}}>{tots.bf}</td>
+                      <td style={{padding:'4px 10px',textAlign:'center',fontWeight:700,color:C.navy}}>{tots.day||0}</td>
+                      <td style={{padding:'4px 10px',textAlign:'center',fontWeight:800,color:C.green,fontSize:14}}>{tots.tot}</td>
+                      <td style={{padding:'4px 10px',textAlign:'center',color:C.gray}}>${travel[st.id]||0}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </Card>
+  );
+}
+
+// ── Daily Tally View ───────────────────────────────────────
+function DailyTallyView({week,dayKey,setWeek,rates,travel}){
+  const day=week[dayKey];
+
+  const addRun=()=>{
+    const num=(day.runs.length||0)+1;
+    if(num>10)return;
+    const newRun={id:uid(),num,counts:[{id:uid(),cls:'Ewes',job:'Shearing',desc:'',counts:Object.fromEntries(SHEARERS.map(s=>[s.id,0]))}]};
+    setWeek(w=>({...w,[dayKey]:{...w[dayKey],runs:[...w[dayKey].runs,newRun]}}));
+  };
+  const updateRun=(id,u)=>setWeek(w=>({...w,[dayKey]:{...w[dayKey],runs:w[dayKey].runs.map(r=>r.id===id?u:r)}}));
+  const deleteRun=(id)=>setWeek(w=>({...w,[dayKey]:{...w[dayKey],runs:w[dayKey].runs.filter(r=>r.id!==id)}}));
+  const setNotes=(v)=>setWeek(w=>({...w,[dayKey]:{...w[dayKey],notes:v}}));
+
+  const dayTotals=useMemo(()=>{
+    let sh=0,cr=0;
+    day.runs.forEach(r=>r.counts.forEach(c=>{
+      const v=SHEARERS.reduce((s,sh)=>s+Number(c.counts[sh.id]||0),0);
+      if(c.job==='Shearing')sh+=v;else cr+=v;
+    }));
+    return{sh,cr};
+  },[day]);
+
+  return(
+    <div>
+      <div style={{display:'flex',gap:10,marginBottom:16,flexWrap:'wrap'}}>
+        <div style={{flex:1,minWidth:120,background:C.blueBg,borderRadius:12,padding:'14px 16px',border:`1px solid ${C.blue}30`}}>
+          <p style={{fontSize:11,color:C.blue,fontWeight:700,marginBottom:2}}>SHEARING TODAY</p>
+          <p style={{fontSize:32,fontWeight:800,color:C.blue}}>{dayTotals.sh}</p>
+          <p style={{fontSize:11,color:C.gray}}>head shorn</p>
+        </div>
+        {dayTotals.cr>0&&(
+          <div style={{flex:1,minWidth:120,background:C.crutchBg,borderRadius:12,padding:'14px 16px',border:`1px solid ${C.crutch}30`}}>
+            <p style={{fontSize:11,color:C.crutch,fontWeight:700,marginBottom:2}}>CRUTCHING TODAY</p>
+            <p style={{fontSize:32,fontWeight:800,color:C.crutch}}>{dayTotals.cr}</p>
+            <p style={{fontSize:11,color:C.gray}}>head crutched</p>
+          </div>
+        )}
+        <div style={{flex:1,minWidth:120,background:'#f0fdf4',borderRadius:12,padding:'14px 16px',border:`1px solid ${C.green}30`}}>
+          <p style={{fontSize:11,color:C.green,fontWeight:700,marginBottom:2}}>SHED TOTAL</p>
+          <p style={{fontSize:32,fontWeight:800,color:C.green}}>
+            {SHEARERS.reduce((s,sh)=>{const t=getShearerTotals(week,sh.id,dayKey);return s+t.shearing.tot+t.crutching.tot;},0)}
+          </p>
+          <p style={{fontSize:11,color:C.gray}}>to date</p>
+        </div>
+      </div>
+
+      {day.runs.map(r=>(
+        <RunCard key={r.id} run={r} shearers={SHEARERS}
+          onUpdate={u=>updateRun(r.id,u)}
+          onDelete={()=>deleteRun(r.id)}/>
+      ))}
+
+      {day.runs.length<10&&(
+        <button onClick={addRun} style={{width:'100%',padding:'12px',borderRadius:12,border:`2px dashed ${C.navy}40`,fontSize:14,fontWeight:700,color:C.navy,background:'transparent',marginBottom:12}}>
+          + Add Run {day.runs.length+1}
+        </button>
+      )}
+
+      <ShearerTotalsCard week={week} dayKey={dayKey}/>
+      <ShedStaffCard week={week} dayKey={dayKey} setWeek={setWeek} travel={travel}/>
+
+      <Card>
+        <SectionLabel>Notes for the day</SectionLabel>
+        <textarea value={day.notes} onChange={e=>setNotes(e.target.value)}
+          placeholder="Add any notes about today's work..."
+          rows={3}
+          style={{width:'100%',padding:'10px 12px',borderRadius:8,border:`1px solid ${C.border}`,fontSize:14,resize:'vertical',lineHeight:1.6}}/>
+      </Card>
+    </div>
+  );
+}
+
+// ── Summary View ───────────────────────────────────────────
+function SummaryView({week,rates,travel}){
+  const rows=SHEARERS.map(s=>{
+    let sh=0,cr=0;
+    DAYS.forEach(d=>{
+      (week[d].runs||[]).forEach(r=>r.counts.forEach(c=>{
+        const v=Number(c.counts[s.id]||0);
+        if(c.job==='Shearing')sh+=v;else cr+=v;
+      }));
+    });
+    const tr=Number(travel[s.id]||0);
+    return{...s,sh,cr,tr};
+  }).filter(r=>r.sh>0||r.cr>0);
+
+  const staffRows=STAFF.map(st=>{
+    let runs=0;
+    DAYS.forEach(d=>{runs+=Number((week[d].staff||{})[st.id]?.runs||0);});
+    return{...st,runs,tr:Number(travel[st.id]||0)};
+  }).filter(r=>r.runs>0);
+
+  const totalSheep=rows.reduce((s,r)=>s+r.sh+r.cr,0);
+
+  return(
+    <div>
+      <Card style={{marginBottom:12,background:C.navy,border:'none'}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',flexWrap:'wrap',gap:10}}>
+          <div>
+            <p style={{color:C.amber,fontSize:12,fontWeight:700,letterSpacing:1,marginBottom:4}}>END OF SHED SUMMARY</p>
+            <p style={{color:'#fff',fontSize:20,fontWeight:800}}>{SHED.property}</p>
+            <p style={{color:'#93c5fd',fontSize:13}}>{SHED.contractor} · {SHED.leader}</p>
+            <p style={{color:'#64748b',fontSize:12,marginTop:4}}>{SHED.start} · {SHED.address}</p>
+          </div>
+          <div style={{textAlign:'right'}}>
+            <p style={{color:'#93c5fd',fontSize:12,marginBottom:2}}>Total sheep</p>
+            <p style={{color:C.amber,fontSize:36,fontWeight:800,lineHeight:1}}>{totalSheep.toLocaleString()}</p>
+          </div>
+        </div>
+      </Card>
+
+      <Card style={{marginBottom:12}}>
+        <SectionLabel>Shearers</SectionLabel>
+        <div className="h-scroll">
+          <table style={{borderCollapse:'collapse',minWidth:'100%',fontSize:13}}>
+            <thead>
+              <tr style={{background:'#f9fafb'}}>
+                {['Name','Shearing','Crutching','Travel'].map(h=>(
+                  <th key={h} style={{padding:'8px 12px',textAlign:h==='Name'?'left':'center',fontWeight:600,color:C.gray,borderBottom:`1px solid ${C.border}`,whiteSpace:'nowrap'}}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r,i)=>(
+                <tr key={r.id} style={{background:i%2===0?'#fff':'#fafafa'}}>
+                  <td style={{padding:'10px 12px',fontWeight:700}}>{r.name}</td>
+                  <td style={{padding:'10px 12px',textAlign:'center',color:C.blue,fontWeight:700}}>{r.sh}</td>
+                  <td style={{padding:'10px 12px',textAlign:'center',color:C.crutch,fontWeight:700}}>{r.cr||'—'}</td>
+                  <td style={{padding:'10px 12px',textAlign:'center',color:C.gray}}>${r.tr}</td>
+                </tr>
+              ))}
+              <tr style={{background:'#f0fdf4',fontWeight:700}}>
+                <td style={{padding:'10px 12px'}}>TOTAL</td>
+                <td style={{padding:'10px 12px',textAlign:'center',color:C.blue}}>{rows.reduce((s,r)=>s+r.sh,0)}</td>
+                <td style={{padding:'10px 12px',textAlign:'center',color:C.crutch}}>{rows.reduce((s,r)=>s+r.cr,0)||'—'}</td>
+                <td style={{padding:'10px 12px',textAlign:'center'}}>—</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      {staffRows.length>0&&(
+        <Card style={{marginBottom:12}}>
+          <SectionLabel>Shed staff</SectionLabel>
+          <div className="h-scroll">
+            <table style={{borderCollapse:'collapse',minWidth:'100%',fontSize:13}}>
+              <thead>
+                <tr style={{background:'#f9fafb'}}>
+                  {['Name','Role','Total Runs','Travel'].map(h=>(
+                    <th key={h} style={{padding:'8px 12px',textAlign:h==='Name'?'left':'center',fontWeight:600,color:C.gray,borderBottom:`1px solid ${C.border}`,whiteSpace:'nowrap'}}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {staffRows.map((r,i)=>(
+                  <tr key={r.id} style={{background:i%2===0?'#fff':'#fafafa'}}>
+                    <td style={{padding:'10px 12px',fontWeight:700}}>{r.name}</td>
+                    <td style={{padding:'10px 12px',color:C.gray}}>{r.role}</td>
+                    <td style={{padding:'10px 12px',textAlign:'center',fontWeight:600}}>{r.runs}</td>
+                    <td style={{padding:'10px 12px',textAlign:'center',color:C.gray}}>${r.tr}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+// ── Admin Panel ────────────────────────────────────────────
+function AdminPanel({rates,setRates,travel,setTravel,week}){
+  const [pin,setPin]=useState('');
+  const [unlocked,setUnlocked]=useState(false);
+  const [pinErr,setPinErr]=useState(false);
+
+  if(!unlocked){
+    return(
+      <Card style={{maxWidth:320,margin:'40px auto',textAlign:'center'}}>
+        <div style={{width:56,height:56,borderRadius:16,background:C.navy,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 16px',fontSize:26}}>🔒</div>
+        <p style={{fontWeight:700,fontSize:18,marginBottom:6}}>Admin Access</p>
+        <p style={{fontSize:13,color:C.gray,marginBottom:20}}>Enter contractor PIN</p>
+        <input type="password" value={pin} onChange={e=>{setPin(e.target.value);setPinErr(false);}}
+          onKeyDown={e=>{if(e.key==='Enter'){if(pin===ADMIN_PIN)setUnlocked(true);else setPinErr(true);}}}
+          placeholder="PIN"
+          style={{width:'100%',padding:'12px',borderRadius:10,border:`1px solid ${pinErr?C.red:C.border}`,fontSize:22,textAlign:'center',marginBottom:12,letterSpacing:6}}/>
+        {pinErr&&<p style={{color:C.red,fontSize:13,marginBottom:8}}>Incorrect PIN</p>}
+        <button onClick={()=>{if(pin===ADMIN_PIN)setUnlocked(true);else setPinErr(true);}}
+          style={{width:'100%',padding:'12px',borderRadius:10,background:C.navy,color:'#fff',fontSize:15,fontWeight:700}}>Unlock</button>
+        <p style={{fontSize:11,color:'#ccc',marginTop:12}}>Demo PIN: 1234</p>
+      </Card>
+    );
+  }
+
+  const handleCSV=()=>{
+    const csv=exportCSV(week,rates,travel);
+    const blob=new Blob([csv],{type:'text/csv'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download='igang-tally.csv';a.click();
+  };
+
+  return(
+    <div>
+      <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:16}}>
+        <div style={{background:'#dcfce7',borderRadius:8,padding:'4px 12px',fontSize:12,fontWeight:700,color:C.green}}>🔓 Admin Unlocked</div>
+        <button onClick={()=>setUnlocked(false)} style={{fontSize:12,color:C.gray}}>Lock</button>
+      </div>
+
+      <Card style={{marginBottom:12}}>
+        <SectionLabel>Pay rates (per head)</SectionLabel>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+          {[['Shearing','shearing'],['Crutching (default)','crutching']].map(([label,key])=>(
+            <div key={key}>
+              <label style={{fontSize:13,fontWeight:600,color:C.gray,display:'block',marginBottom:6}}>{label}</label>
+              <div style={{display:'flex',alignItems:'center',gap:6}}>
+                <span style={{fontSize:16,fontWeight:700,color:C.gray}}>$</span>
+                <input type="number" step="0.05" value={rates[key]}
+                  onChange={e=>setRates(r=>({...r,[key]:Number(e.target.value)}))}
+                  style={{flex:1,padding:'10px',borderRadius:8,border:`1px solid ${C.border}`,fontSize:16,fontWeight:700}}/>
+                <span style={{fontSize:12,color:C.gray}}>/head</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      <Card style={{marginBottom:12}}>
+        <SectionLabel>Travel allowances</SectionLabel>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+          {[...SHEARERS,...STAFF].map(p=>(
+            <div key={p.id} style={{display:'flex',alignItems:'center',gap:8,background:'#f9fafb',borderRadius:8,padding:'10px 12px'}}>
+              <span style={{fontWeight:700,fontSize:13,flex:1}}>{p.name}</span>
+              <span style={{fontSize:14,color:C.gray}}>$</span>
+              <input type="number" value={travel[p.id]||0}
+                onChange={e=>setTravel(t=>({...t,[p.id]:Number(e.target.value)}))}
+                style={{width:64,padding:'6px 8px',borderRadius:6,border:`1px solid ${C.border}`,fontSize:15,fontWeight:700,textAlign:'center'}}/>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      <Card>
+        <SectionLabel>Export</SectionLabel>
+        <p style={{fontSize:13,color:C.gray,marginBottom:12}}>Export tally data as CSV for Xero or MYOB import.</p>
+        <button onClick={handleCSV} style={{width:'100%',padding:'14px',borderRadius:10,background:C.green,color:'#fff',fontSize:15,fontWeight:700}}>
+          ↓ Download CSV
+        </button>
+      </Card>
+    </div>
+  );
+}
+
+// ── App ────────────────────────────────────────────────────
+function App(){
+  const [week,setWeek]=useState(INIT_WEEK);
+  const [day,setDay]=useState('monday');
+  const [view,setView]=useState('tally');
+  const [rates,setRates]=useState(INIT_RATES);
+  const [travel,setTravel]=useState(INIT_TRAVEL);
+
+  return(
+    <div style={{minHeight:'100vh',background:C.bg}}>
+      <div style={{background:`linear-gradient(135deg,${C.navyDark} 0%,${C.navy} 100%)`,padding:'0 16px',position:'sticky',top:0,zIndex:50,boxShadow:'0 2px 12px rgba(0,0,0,0.2)'}}>
+        <div style={{maxWidth:720,margin:'0 auto',display:'flex',alignItems:'center',justifyContent:'space-between',height:56}}>
+          <div style={{display:'flex',alignItems:'center',gap:10}}>
+            <div style={{width:34,height:34,borderRadius:10,background:C.amber,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:900,fontSize:16,color:'#fff',letterSpacing:-1}}>iG</div>
+            <div>
+              <p style={{color:'#fff',fontWeight:800,fontSize:16,lineHeight:1.1}}>iGang</p>
+              <p style={{color:'#93c5fd',fontSize:10,fontWeight:600}}>{SHED.property} · {SHED.contractor}</p>
+            </div>
+          </div>
+          <div style={{display:'flex',gap:4}}>
+            {[['tally','📋 Tally'],['summary','📊 Summary'],['admin','⚙️ Admin']].map(([v,label])=>(
+              <button key={v} onClick={()=>setView(v)}
+                style={{padding:'6px 10px',borderRadius:8,fontSize:12,fontWeight:700,background:view===v?C.amber:'transparent',color:view===v?'#fff':'#93c5fd'}}>
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {view==='tally'&&(
+        <div style={{background:C.navy,overflowX:'auto'}}>
+          <div style={{maxWidth:720,margin:'0 auto',display:'flex'}}>
+            {DAYS.map((d,i)=>{
+              const active=d===day;
+              const hasData=(INIT_WEEK[d]?.runs?.length>0)||(week[d]?.runs?.length>0);
+              return(
+                <button key={d} onClick={()=>setDay(d)}
+                  style={{flex:1,padding:'10px 6px',fontSize:12,fontWeight:700,color:active?C.amber:'#64748b',borderBottom:active?`3px solid ${C.amber}`:'3px solid transparent',whiteSpace:'nowrap',background:'none',position:'relative',minWidth:44}}>
+                  {DAY_SHORT[i]}
+                  <span style={{fontSize:9,display:'block',color:active?'#93c5fd':'#334155'}}>{DATES[i]}</span>
+                  {hasData&&<span style={{position:'absolute',top:6,right:4,width:5,height:5,borderRadius:'50%',background:C.amber}}/>}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      <div style={{maxWidth:720,margin:'0 auto',padding:'16px 12px 80px'}}>
+        {view==='tally'&&<DailyTallyView week={week} dayKey={day} setWeek={setWeek} rates={rates} travel={travel}/>}
+        {view==='summary'&&<SummaryView week={week} rates={rates} travel={travel}/>}
+        {view==='admin'&&<AdminPanel rates={rates} setRates={setRates} travel={travel} setTravel={setTravel} week={week}/>}
+      </div>
+
+      <div style={{position:'fixed',bottom:0,left:0,right:0,background:'rgba(255,255,255,0.95)',backdropFilter:'blur(8px)',borderTop:`1px solid ${C.border}`,padding:'8px 16px',textAlign:'center'}}>
+        <p style={{fontSize:11,color:'#d1d5db'}}>iGang · Powered by Southern Reach Digital · southernreachdigital.com.au</p>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
