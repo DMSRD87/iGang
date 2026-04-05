@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<title>mygang — Murphy Shearing</title>
+<title>MyGang — Murphy Shearing</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
@@ -838,7 +838,7 @@ function JobCardView({job,crewId,onClose}){
   const endD=fmtDate(addDays(job.startDate,job.daysAllocated-1));
   return e('div',{className:'overlay overlay2'},e('div',{className:'jc-white'},
     e('div',{className:'sheet-handle',style:{background:'#ddd'}}),
-    e('div',{className:'jcw-hdr'},e('div',{className:'jcw-logo'},'mygang'),e('div',{className:'jcw-sub'},'Murphy Shearing'),e('button',{className:'jcw-x',onClick:onClose},'×')),
+    e('div',{className:'jcw-hdr'},e('div',{className:'jcw-logo'},'MyGang'),e('div',{className:'jcw-sub'},'Murphy Shearing'),e('button',{className:'jcw-x',onClick:onClose},'×')),
     e('div',{className:'jcw-body'},
       crew&&e('div',{className:'jcw-greet'},'Hi '+crew.name.split(' ')[0]+','),
       e('div',{className:'jcw-alloc'},'You have been allocated to the job —\n'+(farm?farm.name:'Farm')+' (#'+job.jobNumber+')'),
