@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<title>MyGang — Murphy Shearing</title>
+<title>myGang — Murphy Shearing</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
@@ -235,6 +235,19 @@ html,body{background:var(--bg);color:var(--text);font-family:var(--b);min-height
 .summary-pre{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px;font-family:var(--m);font-size:11.5px;line-height:1.75;color:var(--text);overflow-x:auto;white-space:pre;margin-bottom:16px}
 .pay-day-sel{width:100%;padding:10px 12px;background:var(--card2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--b);font-size:15px;font-weight:600;outline:none;cursor:pointer}
 .pay-day-sel:focus{border-color:var(--amber)}
+.sum-toggle{display:flex;background:var(--card2);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:14px}
+.sum-tab{flex:1;padding:11px;text-align:center;font-size:13px;font-weight:700;cursor:pointer;color:var(--muted);border:none;background:none;transition:.15s;font-family:var(--b)}
+.sum-tab.on{background:var(--hdr);color:#fff}
+.invoice-hdr{background:var(--hdr);border-radius:var(--r);padding:16px 18px;margin-bottom:14px}
+.inv-title{font-family:var(--h);font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:4px}
+.inv-farm{font-family:var(--h);font-size:22px;font-weight:800;color:#fff;line-height:1.1;margin-bottom:8px}
+.inv-stats{display:flex;gap:12px;flex-wrap:wrap}
+.inv-stat{display:flex;flex-direction:column;padding:8px 12px;background:rgba(255,255,255,.07);border-radius:8px;min-width:80px}
+.inv-stat-num{font-family:var(--h);font-size:26px;font-weight:800;color:var(--green);line-height:1}
+.inv-stat-lbl{font-size:10px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.4px;margin-top:2px}
+.freq-btns{display:flex;gap:0;background:var(--card2);border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.freq-btn{flex:1;padding:9px;text-align:center;font-size:12px;font-weight:700;cursor:pointer;color:var(--muted);border:none;background:none;transition:.15s;font-family:var(--b);white-space:nowrap}
+.freq-btn.on{background:var(--amber);color:#000}
 /* PROGRESS */
 .prog-wrap{padding:12px 16px}
 .pc{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:12px}
@@ -335,7 +348,7 @@ const FARMS=[{id:'f1',name:'Datsun Station',address:'47 Datsun Road, Burra SA 54
 const CREW=[{id:'ds1',name:'Brady Hargreaves',role:'Shearer',phone:'0411 222 333',hasVehicle:true},{id:'ds2',name:'Jacko Murphy',role:'Shearer',phone:'0422 333 444',hasVehicle:false},{id:'ds3',name:'Tommy Walsh',role:'Shearer',phone:'0433 444 555',hasVehicle:true},{id:'ds4',name:'Stevo Robertson',role:'Shearer',phone:'0444 555 666',hasVehicle:false},{id:'ds5',name:'Anna Kowalski',role:'Wool Handler',phone:'0455 666 777',hasVehicle:true},{id:'ds6',name:'Susie Peters',role:'Wool Handler',phone:'0466 777 888',hasVehicle:false},{id:'ds7',name:'Debbie Lane',role:'Wool Classer',phone:'0477 888 999',hasVehicle:true},{id:'ds8',name:'Mick Talbot',role:'Presser',phone:'0488 999 000',hasVehicle:true},{id:'dh1',name:'Dingo Fraser',role:'Shearer',phone:'0411 100 200',hasVehicle:true},{id:'dh2',name:'Clarky Reid',role:'Shearer',phone:'0422 200 300',hasVehicle:false},{id:'dh3',name:'Baz Mitchell',role:'Shearer',phone:'0433 300 400',hasVehicle:true},{id:'dh4',name:'Thommo Sullivan',role:'Shearer',phone:'0444 400 500',hasVehicle:false},{id:'dh5',name:'Abbie Nguyen',role:'Wool Handler',phone:'0455 500 600',hasVehicle:true},{id:'dh6',name:'Kylie Turner',role:'Wool Handler',phone:'0466 600 700',hasVehicle:false},{id:'dh7',name:'Pete Barker',role:'Presser',phone:'0477 700 800',hasVehicle:true},{id:'dm1',name:'Robbo Denton',role:'Shearer',phone:'0411 110 220',hasVehicle:true},{id:'dm2',name:'Macca Thompson',role:'Shearer',phone:'0422 220 330',hasVehicle:false},{id:'dm3',name:'Willo Kerr',role:'Shearer',phone:'0433 330 440',hasVehicle:true},{id:'dm4',name:'Trev Stone',role:'Wool Handler',phone:'0444 440 550',hasVehicle:false},{id:'dm5',name:'Chook Wilson',role:'Wool Handler',phone:'0455 550 660',hasVehicle:true},{id:'dm6',name:'Phil Crawford',role:'Wool Classer',phone:'0466 660 770',hasVehicle:false},{id:'dm7',name:'Jack Ryan',role:'Presser',phone:'0477 770 880',hasVehicle:true},{id:'dl1',name:'Cazza Burns',role:'Shearer',phone:'0411 010 020',hasVehicle:true},{id:'dl2',name:'Johnno Watts',role:'Shearer',phone:'0422 020 030',hasVehicle:false},{id:'dl3',name:'Spud Lynch',role:'Shearer',phone:'0433 030 040',hasVehicle:true},{id:'dl4',name:'Mel Hughes',role:'Wool Handler',phone:'0444 040 050',hasVehicle:false},{id:'dl5',name:'Richo Palmer',role:'Penner',phone:'0455 050 060',hasVehicle:true}];
 const D0='2026-03-26',D1='2026-03-27',D2='2026-03-30',D3='2026-03-31';
 const mkRun=(id,type,desc,counts,ro)=>({id,mobs:[{id:id+'_m1',type,desc,counts,...(ro!=null?{rateOverride:ro}:{})}]});
-const mkRates=(ov={})=>({shearingPerHead:4.80,crutchingPerHead:1.55,woolHandlerPerRun:80,classerPerRun:110,pennerPerRun:85,presserPerRun:85,presserPerBale:14.20,baleThreshold:13,crewOverrides:{},shearerLoadings:{},travelDays:{},travelRate:{},payDayOfWeek:4,...ov});
+const mkRates=(ov={})=>({shearingPerHead:4.80,crutchingPerHead:1.55,woolHandlerPerRun:80,classerPerRun:110,pennerPerRun:85,presserPerRun:85,presserPerBale:14.20,baleThreshold:13,crewOverrides:{},shearerLoadings:{},travelDays:{},travelRate:{},payDayOfWeek:4,payFrequency:'weekly',farmerShearingRate:6.50,farmerCrutchingRate:2.00,...ov});
 const INIT_JOBS=[
   {id:'j1',jobNumber:'002101',farmId:'f1',type:'Shearing',notes_job:'Full shear — Merino Ewes, CRT and wig. 4 stands. BYO EVOs.',startDate:D0,daysAllocated:6,totalSheep:4500,evos:'BYO',crutchingTrailer:false,transport:true,accommodation:'Shearers quarters on property',status:'Active',crew:['ds1','ds2','ds3','ds4','ds5','ds6','ds7','ds8'],
     rates:mkRates({crewOverrides:{ds5:90,ds7:115},travelDays:{ds1:4,ds2:4,ds3:4,ds4:4,ds5:4,ds6:4,ds7:4,ds8:4},travelRate:{ds1:40,ds2:40,ds3:40,ds4:40,ds5:40,ds6:40,ds7:80,ds8:40}}),
@@ -416,8 +429,15 @@ function getPeriodForDate(dateStr,payDayOfWeek){
   const endStr=addDays(startStr,6);
   return{start:startStr,end:endStr};
 }
-function getPeriodByOffset(todayStr,payDayOfWeek,offset){
+function getPeriodByOffset(todayStr,payDayOfWeek,offset,frequency){
+  if(frequency==='shed')return null;
+  const len=frequency==='fortnightly'?14:7;
   const base=getPeriodForDate(todayStr,payDayOfWeek);
+  if(frequency==='fortnightly'){
+    // For fortnightly: find which 14-day period we're in by using the base weekly period
+    // and adjusting. Odd/even offset from base determines which fortnight.
+    return{start:addDays(base.start,len*offset),end:addDays(base.end+(len-7),len*offset)};
+  }
   return{start:addDays(base.start,7*offset),end:addDays(base.end,7*offset)};
 }
 function fmtPeriodLabel(start,end){
@@ -449,6 +469,50 @@ function calcPeriodStats(job,period){
   return{shorn,totalEarn};
 }
 /* PAY SUMMARY */
+const pad=(str,len)=>String(str).padEnd(len,' ');
+function generateFarmerInvoice(job){
+  const farm=gf(job.farmId);const rates=job.rates||{};
+  const shIds=job.crew.filter(id=>gc(id)?.role==='Shearer');
+  const dash='\u2500'.repeat(56);
+  /* Group mobs by type+desc across entire job */
+  const groups={};
+  Object.values(job.runs||{}).forEach(dayRuns=>{dayRuns.forEach(run=>{mobsOf(run).forEach(mob=>{
+    const key=mob.type+'|'+(mob.desc||'Unspecified');
+    const cnt=shIds.reduce((s,id)=>s+(mob.counts[id]||0),0);if(!cnt)return;
+    const chargeRate=mob.rateOverride!=null?mob.rateOverride:(mob.type==='Shearing'?rates.farmerShearingRate||6.50:rates.farmerCrutchingRate||2.00);
+    if(!groups[key])groups[key]={type:mob.type,desc:mob.desc||'Unspecified',count:0,rate:chargeRate};
+    groups[key].count+=cnt;
+  });});});
+  /* Presser bales for info */
+  const pressers=job.crew.filter(id=>gc(id)?.role==='Presser');
+  const totalBales=pressers.reduce((s,id)=>s+Object.values(job.baleTallies[id]||{}).reduce((a,b)=>a+b,0)+(job.baleBF[id]||0),0);
+  const today=localToday();
+  const L=[];
+  L.push('INVOICE');
+  L.push('Murphy Shearing');
+  L.push('Date: '+fmtDate(today));
+  L.push('');
+  if(farm){L.push('To:  '+farm.name);L.push('     '+farm.address);}
+  L.push('');
+  L.push('Job: #'+job.jobNumber+' \u2014 '+job.type);
+  L.push('     From: '+fmtDate(job.startDate)+'   ('+job.daysAllocated+' days allocated)');
+  L.push('');L.push(dash);
+  L.push(pad('Description',32)+pad('Qty',9)+pad('Rate',10)+'Amount');
+  L.push(dash);
+  let totalDue=0;
+  Object.values(groups).forEach(g=>{
+    const amt=g.count*g.rate;totalDue+=amt;
+    L.push(pad(g.type+' \u2014 '+g.desc,32)+pad(g.count.toLocaleString(),9)+pad('$'+g.rate.toFixed(2),10)+'$'+amt.toFixed(2));
+  });
+  if(totalBales>0)L.push(pad('Bales pressed (info only)',32)+pad(totalBales,9)+pad('\u2014',10)+'\u2014');
+  L.push(dash);L.push('');
+  const totalShorn=Object.values(groups).reduce((s,g)=>s+g.count,0);
+  L.push('Total sheep: '+totalShorn.toLocaleString());L.push('');
+  L.push('TOTAL DUE:   $'+totalDue.toFixed(2));
+  L.push('');L.push(dash);
+  L.push('Payment terms: 7 days from invoice date');
+  return L.join('\n');
+}
 function generateSummary(job,period){
   const farm=gf(job.farmId);const rates=job.rates||{};
   const shIds=job.crew.filter(id=>gc(id)?.role==='Shearer');
@@ -514,7 +578,7 @@ function generateSummary(job,period){
 /* ── TOP BAR ── */
 function TopBar({role,setRole,onBack,backLabel}){
   return e('div',{className:'topbar'},
-    onBack?e('button',{className:'back-btn',onClick:onBack},e('span',{className:'back-arr'},'←'),e('span',{className:'back-label'},backLabel||'Back')):e('div',{className:'logo'},'i',e('em',null,'Gang')),
+    onBack?e('button',{className:'back-btn',onClick:onBack},e('span',{className:'back-arr'},'←'),e('span',{className:'back-label'},backLabel||'Back')):e('div',{className:'logo'},'my',e('em',null,'Gang')),
     e('div',{className:'role-toggle'},[['👁','View','read_only'],['📋','Lead','shed_lead'],['🔑','Admin','admin']].map(([ic,lbl,rv])=>e('button',{key:rv,className:`rt-btn${role===rv?' active':''}`,onClick:()=>setRole(rv)},`${ic} ${lbl}`)))
   );
 }
@@ -696,44 +760,96 @@ function TallyTab({job,setJob,role,viewDate,setViewDate}){
 function SummaryTab({job}){
   const rates=job.rates||{};
   const payDayOfWeek=rates.payDayOfWeek!=null?rates.payDayOfWeek:4;
+  const payFrequency=rates.payFrequency||'weekly';
   const todayStr=localToday();
+  const [view,setView]=useState('crew'); /* 'crew' | 'invoice' */
   const [offset,setOffset]=useState(0);
   const [copied,setCopied]=useState(false);
-  const period=getPeriodByOffset(todayStr,payDayOfWeek,offset);
+  const [copiedInv,setCopiedInv]=useState(false);
+
+  /* Period calc — null for end-of-shed */
+  const period=payFrequency==='shed'?null:getPeriodByOffset(todayStr,payDayOfWeek,offset,payFrequency);
+  const periodLen=payFrequency==='fortnightly'?14:7;
   const isCurrentPeriod=offset===0;
-  const isFuture=period.start>todayStr;
-  const stats=calcPeriodStats(job,period);
-  const text=generateSummary(job,period);
-  const copy=()=>{navigator.clipboard.writeText(text).then(()=>{setCopied(true);setTimeout(()=>setCopied(false),2000);}).catch(()=>{});};
-  const prevLabel='← '+DAY_FULL[payDayOfWeek].slice(0,3)+' '+addDays(period.start,-7).split('-')[2]+'/'+addDays(period.start,-7).split('-')[1];
-  const nextLabel=DAY_FULL[payDayOfWeek].slice(0,3)+' '+addDays(period.start,7).split('-')[2]+'/'+addDays(period.start,7).split('-')[1]+' →';
+  const isFuture=period&&period.start>todayStr;
+  const stats=period?calcPeriodStats(job,period):{shorn:0,totalEarn:0};
+  const crewText=generateSummary(job,period);
+  const invText=generateFarmerInvoice(job);
+
+  const copy=(txt,set)=>{navigator.clipboard.writeText(txt).then(()=>{set(true);setTimeout(()=>set(false),2000);}).catch(()=>{});};
+
+  /* Labels for navigation buttons */
+  const freqLabel=payFrequency==='weekly'?'Weekly':payFrequency==='fortnightly'?'Fortnightly':'End of Shed';
+  const prevStart=period?addDays(period.start,-periodLen):null;
+  const nextStart=period?addDays(period.start,periodLen):null;
+  const btnLabel=d=>{const [,mo,dy]=d.split('-').map(Number);const dt=new Date(d.split('-')[0],mo-1,dy);const dn=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];return dn[dt.getDay()]+' '+String(dy).padStart(2,'0')+'/'+String(mo).padStart(2,'0');};
+
+  /* Farmer invoice stats for header */
+  const shIds=job.crew.filter(id=>gc(id)?.role==='Shearer');
+  const totalJobShorn=Object.values(job.runs||{}).flat().flatMap(r=>mobsOf(r)).reduce((s,mob)=>s+shIds.reduce((a,id)=>a+(mob.counts[id]||0),0),0);
+  const totalDue=Object.values(job.runs||{}).flat().flatMap(r=>mobsOf(r)).reduce((s,mob)=>{
+    const cnt=shIds.reduce((a,id)=>a+(mob.counts[id]||0),0);
+    const r2=mob.rateOverride!=null?mob.rateOverride:(mob.type==='Shearing'?rates.farmerShearingRate||6.50:rates.farmerCrutchingRate||2.00);
+    return s+cnt*r2;
+  },0);
+
   return e('div',{className:'summary-wrap'},
-    e('div',{className:'period-nav'},
-      e('div',{className:'period-top'},
-        e('div',{className:'period-label'},
-          e('div',{className:'period-title'},'Pay Period — '+DAY_FULL[payDayOfWeek]+' pays'),
-          e('div',{className:'period-dates'},fmtPeriodLabel(period.start,period.end)),
-          isCurrentPeriod&&e('span',{className:'period-badge'},'Current period')
+    /* View toggle */
+    e('div',{className:'sum-toggle'},
+      e('button',{className:`sum-tab${view==='crew'?' on':''}`,onClick:()=>setView('crew')},'💰 Crew Pays'),
+      e('button',{className:`sum-tab${view==='invoice'?' on':''}`,onClick:()=>setView('invoice')},'🧾 Farmer Invoice')
+    ),
+
+    /* ── CREW PAYS VIEW ── */
+    view==='crew'&&e('div',null,
+      /* Period navigator */
+      e('div',{className:'period-nav'},
+        e('div',{className:'period-top'},
+          e('div',{className:'period-label'},
+            e('div',{className:'period-title'},'Crew Pay — '+freqLabel+(payFrequency!=='shed'?' · '+DAY_FULL[payDayOfWeek]+' pays':'')),
+            payFrequency==='shed'
+              ?e('div',{className:'period-dates'},'Full Job — '+fmtDateLong(job.startDate)+' onwards')
+              :e('div',{className:'period-dates'},fmtPeriodLabel(period.start,period.end)),
+            (isCurrentPeriod||payFrequency==='shed')&&e('span',{className:'period-badge'},payFrequency==='shed'?'Whole job':'Current period')
+          ),
+          stats.shorn>0&&!isFuture&&e('div',{className:'period-stats'},
+            e('div',{className:'ps-item'},e('div',{className:'ps-num'},stats.shorn.toLocaleString()),e('div',{className:'ps-lbl'},'Sheep')),
+            e('div',{className:'ps-item'},e('div',{className:'ps-pay'},'$'+Math.round(stats.totalEarn).toLocaleString()),e('div',{className:'ps-lbl'},'Est. Payroll'))
+          )
         ),
-        stats.shorn>0&&!isFuture&&e('div',{className:'period-stats'},
-          e('div',{className:'ps-item'},e('div',{className:'ps-num'},stats.shorn.toLocaleString()),e('div',{className:'ps-lbl'},'Sheep')),
-          e('div',{className:'ps-item'},e('div',{className:'ps-pay'},'$'+Math.round(stats.totalEarn).toLocaleString()),e('div',{className:'ps-lbl'},'Est. Payroll'))
+        payFrequency!=='shed'&&e('div',{className:'period-btns'},
+          e('button',{className:'period-btn',onClick:()=>setOffset(o=>o-1)},'← '+btnLabel(prevStart)),
+          isCurrentPeriod?e('span',{className:'period-btn current'},'Current'):e('button',{className:'period-btn',onClick:()=>setOffset(0)},'Jump to Current'),
+          e('button',{className:'period-btn',onClick:()=>setOffset(o=>o+1)},btnLabel(nextStart)+' →')
         )
       ),
-      e('div',{className:'period-btns'},
-        e('button',{className:'period-btn',onClick:()=>setOffset(o=>o-1)},prevLabel),
-        isCurrentPeriod
-          ?e('span',{className:'period-btn current'},'Current')
-          :e('button',{className:'period-btn',onClick:()=>setOffset(0)},'Jump to Current'),
-        e('button',{className:'period-btn',onClick:()=>setOffset(o=>o+1)},nextLabel)
-      )
+      isFuture
+        ?e('div',{style:{padding:'32px 0',textAlign:'center',color:'var(--dim)'}},e('div',{style:{fontSize:32,marginBottom:8}},'📅'),e('div',null,'Future period — no data yet'))
+        :e('div',null,
+            e('div',{className:'summary-actions'},e('button',{className:'btn-copy',onClick:()=>copy(crewText,setCopied)},copied?'✓ Copied!':'📋 Copy Crew Pay Summary')),
+            e('pre',{className:'summary-pre'},crewText)
+          )
     ),
-    isFuture
-      ?e('div',{style:{padding:'32px 0',textAlign:'center',color:'var(--dim)'}},e('div',{style:{fontSize:32,marginBottom:8}},'📅'),e('div',null,'Future period — no data yet'))
-      :e('div',null,
-          e('div',{className:'summary-actions'},e('button',{className:'btn-copy',onClick:copy},copied?'✓ Copied!':'📋 Copy Pay Summary')),
-          e('pre',{className:'summary-pre'},text)
+
+    /* ── FARMER INVOICE VIEW ── */
+    view==='invoice'&&e('div',null,
+      e('div',{className:'invoice-hdr'},
+        e('div',{className:'inv-title'},'Farmer Invoice — Full Job'),
+        e('div',{className:'inv-farm'},gf(job.farmId)?gf(job.farmId).name:'Unknown Farm'),
+        e('div',{style:{fontSize:'12px',color:'rgba(255,255,255,.5)',marginBottom:10}},
+          'Covers entire job '+fmtDate(job.startDate)+' — '+job.daysAllocated+' days allocated'
+        ),
+        e('div',{className:'inv-stats'},
+          e('div',{className:'inv-stat'},e('div',{className:'inv-stat-num'},totalJobShorn.toLocaleString()),e('div',{className:'inv-stat-lbl'},'Total Sheep')),
+          e('div',{className:'inv-stat'},e('div',{className:'inv-stat-num'},'$'+Math.round(totalDue).toLocaleString()),e('div',{className:'inv-stat-lbl'},'Invoice Total'))
         )
+      ),
+      e('div',{style:{fontSize:'12px',color:'var(--muted)',marginBottom:10,padding:'0 2px'}},
+        '✓ Farmer invoice always shows the complete job — independent of crew pay cycles. A 12-day shed spanning 2 pay periods still invoices as one job.'
+      ),
+      e('div',{className:'summary-actions'},e('button',{className:'btn-copy',onClick:()=>copy(invText,setCopiedInv)},copiedInv?'✓ Copied!':'📋 Copy Farmer Invoice')),
+      e('pre',{className:'summary-pre'},invText)
+    )
   );
 }
 /* ── ADMIN TAB ── */
@@ -756,15 +872,33 @@ function AdminTab({job,setJob}){
       job.crew.map(id=>{const c=gc(id);if(!c)return null;const days=(rates.travelDays||{})[id]||'';const rate=(rates.travelRate||{})[id]||'';return e('div',{key:id,className:'loading-row'},e('div',{className:'lr-l'},e(Av,{name:c.name,size:32}),e('div',null,e('div',{className:'lr-name'},c.name),e('div',{className:'lr-role'},c.role))),e('div',{className:'lr-r',style:{gap:8}},e('span',{style:{display:'flex',alignItems:'center',gap:3}},e('input',{type:'number',className:'tr-inp',value:days,placeholder:'0',min:0,onChange:ev=>setTD(id,ev.target.value)}),e('span',{className:'tr-unit'},'days')),e('span',{style:{display:'flex',alignItems:'center',gap:3}},e('span',{className:'lr-prefix'},'$'),e('input',{type:'number',className:'tr-inp',style:{width:52},value:rate,placeholder:'40',step:'5',onChange:ev=>setTR(id,ev.target.value)}),e('span',{className:'tr-unit'},'/day'))));})
     ),
     e('div',{className:'admin-section'},
-      e('div',{className:'admin-sec-hdr'},e('div',{className:'admin-sec-title'},'Pay Settings'),e('div',{className:'admin-sec-sub'},'Weekly pay cycle — Summary tab navigates by these 7-day periods')),
+      e('div',{className:'admin-sec-hdr'},e('div',{className:'admin-sec-title'},'Pay Settings'),e('div',{className:'admin-sec-sub'},'Crew pay cycle — controls how Summary tab filters pay periods')),
       e('div',{style:{padding:'14px'}},
-        e('div',{className:'rate-lbl',style:{marginBottom:8}},'Pay Day — wages processed on this day for the prior 7 days'),
-        e('select',{className:'pay-day-sel',value:rates.payDayOfWeek!=null?rates.payDayOfWeek:4,onChange:ev=>setJob(prev=>({...prev,rates:{...prev.rates,payDayOfWeek:parseInt(ev.target.value)}}))},
-          DAY_FULL.map((day,i)=>e('option',{key:i,value:i},day))
+        e('div',{className:'rate-lbl',style:{marginBottom:8}},'Pay Frequency'),
+        e('div',{className:'freq-btns'},
+          [['weekly','Weekly'],['fortnightly','Fortnightly'],['shed','End of Shed']].map(([v,l])=>
+            e('button',{key:v,className:`freq-btn${(rates.payFrequency||'weekly')===v?' on':''}`,onClick:()=>setJob(prev=>({...prev,rates:{...prev.rates,payFrequency:v}}))},l)
+          )
         ),
-        e('div',{style:{fontSize:'12px',color:'var(--muted)',marginTop:8}},
-          'Period: '+DAY_FULL[rates.payDayOfWeek!=null?rates.payDayOfWeek:4]+' 12:00am \u2192 '+DAY_FULL[((rates.payDayOfWeek!=null?rates.payDayOfWeek:4)+6)%7]+' 11:59pm (7 days)'
+        (rates.payFrequency||'weekly')!=='shed'&&e('div',null,
+          e('div',{className:'rate-lbl',style:{marginBottom:8,marginTop:14}},'Pay Day — wages processed on this day for the prior '+(rates.payFrequency==='fortnightly'?'14':'7')+' days'),
+          e('select',{className:'pay-day-sel',value:rates.payDayOfWeek!=null?rates.payDayOfWeek:4,onChange:ev=>setJob(prev=>({...prev,rates:{...prev.rates,payDayOfWeek:parseInt(ev.target.value)}}))},
+            DAY_FULL.map((day,i)=>e('option',{key:i,value:i},day))
+          ),
+          e('div',{style:{fontSize:'12px',color:'var(--muted)',marginTop:8}},
+            'Period: '+DAY_FULL[rates.payDayOfWeek!=null?rates.payDayOfWeek:4]+' \u2192 '+DAY_FULL[((rates.payDayOfWeek!=null?rates.payDayOfWeek:4)+(rates.payFrequency==='fortnightly'?13:6))%7]+' ('+( rates.payFrequency==='fortnightly'?'14':'7')+' days)'
+          )
+        ),
+        (rates.payFrequency==='shed')&&e('div',{style:{fontSize:'12px',color:'var(--muted)',marginTop:10,padding:'8px 12px',background:'var(--card2)',borderRadius:8}},
+          '📋 Crew paid in full at job completion. Summary shows all tallies for the entire job as one pay run.'
         )
+      )
+    ),
+    e('div',{className:'admin-section'},
+      e('div',{className:'admin-sec-hdr'},e('div',{className:'admin-sec-title'},'Farmer Charge-out Rates'),e('div',{className:'admin-sec-sub'},'What the contractor charges the farmer — used in Farmer Invoice (separate from crew pay rates)')),
+      e('div',{className:'rate-grid'},
+        e('div',{className:'rate-cell'},e('div',{className:'rate-lbl'},'Shearing $/head'),e('div',{className:'rate-inp-row'},e('span',{className:'rate-prefix'},'$'),e('input',{type:'number',className:'rate-inp',value:rates.farmerShearingRate||'',placeholder:'6.50',step:'0.05',onChange:ev=>setRate('farmerShearingRate',ev.target.value)}))),
+        e('div',{className:'rate-cell'},e('div',{className:'rate-lbl'},'Crutching $/head'),e('div',{className:'rate-inp-row'},e('span',{className:'rate-prefix'},'$'),e('input',{type:'number',className:'rate-inp',value:rates.farmerCrutchingRate||'',placeholder:'2.00',step:'0.05',onChange:ev=>setRate('farmerCrutchingRate',ev.target.value)})))
       )
     ),
     e('div',{style:{height:16}})
@@ -838,7 +972,7 @@ function JobCardView({job,crewId,onClose}){
   const endD=fmtDate(addDays(job.startDate,job.daysAllocated-1));
   return e('div',{className:'overlay overlay2'},e('div',{className:'jc-white'},
     e('div',{className:'sheet-handle',style:{background:'#ddd'}}),
-    e('div',{className:'jcw-hdr'},e('div',{className:'jcw-logo'},'MyGang'),e('div',{className:'jcw-sub'},'Murphy Shearing'),e('button',{className:'jcw-x',onClick:onClose},'×')),
+    e('div',{className:'jcw-hdr'},e('div',{className:'jcw-logo'},'myGang'),e('div',{className:'jcw-sub'},'Murphy Shearing'),e('button',{className:'jcw-x',onClick:onClose},'×')),
     e('div',{className:'jcw-body'},
       crew&&e('div',{className:'jcw-greet'},'Hi '+crew.name.split(' ')[0]+','),
       e('div',{className:'jcw-alloc'},'You have been allocated to the job —\n'+(farm?farm.name:'Farm')+' (#'+job.jobNumber+')'),
