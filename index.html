@@ -248,6 +248,21 @@ html,body{background:var(--bg);color:var(--text);font-family:var(--b);min-height
 .freq-btns{display:flex;gap:0;background:var(--card2);border:1px solid var(--border);border-radius:8px;overflow:hidden}
 .freq-btn{flex:1;padding:9px;text-align:center;font-size:12px;font-weight:700;cursor:pointer;color:var(--muted);border:none;background:none;transition:.15s;font-family:var(--b);white-space:nowrap}
 .freq-btn.on{background:var(--amber);color:#000}
+.crew-detail-row{padding:14px;border-bottom:1px solid var(--border)}
+.crew-detail-row:last-child{border-bottom:none}
+.cd-top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.cd-name{font-weight:700;font-size:15px;flex:1}
+.cd-car-btn{padding:5px 10px;border-radius:6px;font-size:13px;cursor:pointer;border:1px solid var(--border);background:var(--card2);transition:.12s}
+.cd-car-btn.on{background:var(--amberD);border-color:var(--amberB)}
+.cd-fields{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cd-field{display:flex;flex-direction:column;gap:4px}
+.cd-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--dim)}
+.cd-inp{background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:7px 9px;font-family:var(--b);font-size:13px;font-weight:600;color:var(--text);outline:none;width:100%;-moz-appearance:textfield}
+.cd-inp::-webkit-inner-spin-button,.cd-inp::-webkit-outer-spin-button{-webkit-appearance:none}
+.cd-inp:focus{border-color:var(--amber)}
+.cd-role-sel{background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:7px 9px;font-family:var(--b);font-size:13px;font-weight:600;color:var(--text);outline:none;width:100%;cursor:pointer}
+.cd-role-sel:focus{border-color:var(--amber)}
+.tax-note{font-size:11px;color:var(--muted);margin-top:3px}
 /* PROGRESS */
 .prog-wrap{padding:12px 16px}
 .pc{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:12px}
@@ -348,7 +363,7 @@ const FARMS=[{id:'f1',name:'Datsun Station',address:'47 Datsun Road, Burra SA 54
 const CREW=[{id:'ds1',name:'Brady Hargreaves',role:'Shearer',phone:'0411 222 333',hasVehicle:true},{id:'ds2',name:'Jacko Murphy',role:'Shearer',phone:'0422 333 444',hasVehicle:false},{id:'ds3',name:'Tommy Walsh',role:'Shearer',phone:'0433 444 555',hasVehicle:true},{id:'ds4',name:'Stevo Robertson',role:'Shearer',phone:'0444 555 666',hasVehicle:false},{id:'ds5',name:'Anna Kowalski',role:'Wool Handler',phone:'0455 666 777',hasVehicle:true},{id:'ds6',name:'Susie Peters',role:'Wool Handler',phone:'0466 777 888',hasVehicle:false},{id:'ds7',name:'Debbie Lane',role:'Wool Classer',phone:'0477 888 999',hasVehicle:true},{id:'ds8',name:'Mick Talbot',role:'Presser',phone:'0488 999 000',hasVehicle:true},{id:'dh1',name:'Dingo Fraser',role:'Shearer',phone:'0411 100 200',hasVehicle:true},{id:'dh2',name:'Clarky Reid',role:'Shearer',phone:'0422 200 300',hasVehicle:false},{id:'dh3',name:'Baz Mitchell',role:'Shearer',phone:'0433 300 400',hasVehicle:true},{id:'dh4',name:'Thommo Sullivan',role:'Shearer',phone:'0444 400 500',hasVehicle:false},{id:'dh5',name:'Abbie Nguyen',role:'Wool Handler',phone:'0455 500 600',hasVehicle:true},{id:'dh6',name:'Kylie Turner',role:'Wool Handler',phone:'0466 600 700',hasVehicle:false},{id:'dh7',name:'Pete Barker',role:'Presser',phone:'0477 700 800',hasVehicle:true},{id:'dm1',name:'Robbo Denton',role:'Shearer',phone:'0411 110 220',hasVehicle:true},{id:'dm2',name:'Macca Thompson',role:'Shearer',phone:'0422 220 330',hasVehicle:false},{id:'dm3',name:'Willo Kerr',role:'Shearer',phone:'0433 330 440',hasVehicle:true},{id:'dm4',name:'Trev Stone',role:'Wool Handler',phone:'0444 440 550',hasVehicle:false},{id:'dm5',name:'Chook Wilson',role:'Wool Handler',phone:'0455 550 660',hasVehicle:true},{id:'dm6',name:'Phil Crawford',role:'Wool Classer',phone:'0466 660 770',hasVehicle:false},{id:'dm7',name:'Jack Ryan',role:'Presser',phone:'0477 770 880',hasVehicle:true},{id:'dl1',name:'Cazza Burns',role:'Shearer',phone:'0411 010 020',hasVehicle:true},{id:'dl2',name:'Johnno Watts',role:'Shearer',phone:'0422 020 030',hasVehicle:false},{id:'dl3',name:'Spud Lynch',role:'Shearer',phone:'0433 030 040',hasVehicle:true},{id:'dl4',name:'Mel Hughes',role:'Wool Handler',phone:'0444 040 050',hasVehicle:false},{id:'dl5',name:'Richo Palmer',role:'Penner',phone:'0455 050 060',hasVehicle:true}];
 const D0='2026-03-26',D1='2026-03-27',D2='2026-03-30',D3='2026-03-31';
 const mkRun=(id,type,desc,counts,ro)=>({id,mobs:[{id:id+'_m1',type,desc,counts,...(ro!=null?{rateOverride:ro}:{})}]});
-const mkRates=(ov={})=>({shearingPerHead:4.80,crutchingPerHead:1.55,woolHandlerPerRun:80,classerPerRun:110,pennerPerRun:85,presserPerRun:85,presserPerBale:14.20,baleThreshold:13,crewOverrides:{},shearerLoadings:{},travelDays:{},travelRate:{},payDayOfWeek:4,payFrequency:'weekly',farmerShearingRate:6.50,farmerCrutchingRate:2.00,...ov});
+const mkRates=(ov={})=>({shearingPerHead:4.80,crutchingPerHead:1.55,woolHandlerPerRun:80,classerPerRun:110,pennerPerRun:85,presserPerRun:85,presserPerBale:14.20,baleThreshold:13,crewOverrides:{},shearerLoadings:{},travelDays:{},travelRate:{},payDayOfWeek:4,payFrequency:'weekly',farmerShearingRate:6.50,farmerCrutchingRate:2.00,crewDetails:{},...ov});
 const INIT_JOBS=[
   {id:'j1',jobNumber:'002101',farmId:'f1',type:'Shearing',notes_job:'Full shear — Merino Ewes, CRT and wig. 4 stands. BYO EVOs.',startDate:D0,daysAllocated:6,totalSheep:4500,evos:'BYO',crutchingTrailer:false,transport:true,accommodation:'Shearers quarters on property',status:'Active',crew:['ds1','ds2','ds3','ds4','ds5','ds6','ds7','ds8'],
     rates:mkRates({crewOverrides:{ds5:90,ds7:115},travelDays:{ds1:4,ds2:4,ds3:4,ds4:4,ds5:4,ds6:4,ds7:4,ds8:4},travelRate:{ds1:40,ds2:40,ds3:40,ds4:40,ds5:40,ds6:40,ds7:80,ds8:40}}),
@@ -533,15 +548,19 @@ function generateSummary(job,period){
   L.push('');L.push(dash);L.push('');L.push('SHEARERS');L.push(dash);
   shIds.forEach(id=>{
     const c=gc(id);if(!c)return;const s=shornBy[id];
+    const det=(rates.crewDetails||{})[id]||{};
+    const taxPct=parseFloat(det.taxRate||0)||0;
     const shR=(rates.shearingPerHead||4.80)+((rates.shearerLoadings||{})[id]||0);
     const crR=rates.crutchingPerHead||1.55;
     const travel=trvl(id);const gross=s.shEarn+s.crEarn+travel;
+    const taxAmt=taxPct>0?gross*(taxPct/100):0;
     totalShEarn+=s.shEarn+s.crEarn;totalTravel+=travel;
-    L.push('');L.push(sn(c.name)+' \u2014 '+c.role);
+    L.push('');L.push(sn(c.name)+' \u2014 '+(det.role||c.role));
     if(s.sh>0)L.push('  Sheep shorn: '+s.sh.toLocaleString()+' head @ $'+shR.toFixed(2)+' = $'+s.shEarn.toFixed(2));
     if(s.cr>0)L.push('  Crutched: '+s.cr.toLocaleString()+' head @ $'+crR.toFixed(2)+' = $'+s.crEarn.toFixed(2));
     if(td[id])L.push('  Travel: '+td[id]+' days x $'+(tr[id]||0).toFixed(2)+'/day = $'+travel.toFixed(2));
     L.push('  GROSS TOTAL: $'+gross.toFixed(2));
+    if(taxPct>0){L.push('  Tax withheld ('+taxPct+'%): -$'+taxAmt.toFixed(2));L.push('  NET PAY: $'+(gross-taxAmt).toFixed(2));}
   });
   L.push('');L.push(dash);L.push('');L.push('SHED STAFF');L.push(dash);
   shedIds.forEach(id=>{
@@ -561,9 +580,13 @@ function generateSummary(job,period){
       else{earnLine='  '+totalRuns+' runs @ $'+rpr.toFixed(2)+'/run = $'+earn.toFixed(2);}
     }else{earn=totalRuns*rpr;earnLine='  '+totalRuns+' runs @ $'+rpr.toFixed(2)+'/run = $'+earn.toFixed(2);}
     const gross=earn+travel;totalShedEarn+=earn;totalTravel+=travel;
-    L.push('');L.push(sn(c.name)+' \u2014 '+c.role);L.push(earnLine);
+    const det=(rates.crewDetails||{})[id]||{};
+    const taxPct=parseFloat(det.taxRate||0)||0;
+    const taxAmt=taxPct>0?gross*(taxPct/100):0;
+    L.push('');L.push(sn(c.name)+' \u2014 '+(det.role||c.role));L.push(earnLine);
     if(td[id])L.push('  Travel: '+td[id]+' days x $'+(tr[id]||0).toFixed(2)+'/day = $'+travel.toFixed(2));
     L.push('  GROSS TOTAL: $'+gross.toFixed(2));
+    if(taxPct>0){L.push('  Tax withheld ('+taxPct+'%): -$'+taxAmt.toFixed(2));L.push('  NET PAY: $'+(gross-taxAmt).toFixed(2));}
   });
   const totalShorn=shIds.reduce((s,id)=>s+(shornBy[id].sh+shornBy[id].cr),0);
   const jobTotal=totalShEarn+totalShedEarn+totalTravel;
@@ -762,36 +785,39 @@ function SummaryTab({job}){
   const payDayOfWeek=rates.payDayOfWeek!=null?rates.payDayOfWeek:4;
   const payFrequency=rates.payFrequency||'weekly';
   const todayStr=localToday();
-  const [view,setView]=useState('crew'); /* 'crew' | 'invoice' */
-  const [offset,setOffset]=useState(0);
+  const periodLen=payFrequency==='fortnightly'?14:7;
+
+  /* Find the offset of the most recent period that actually has data */
+  function findBestOffset(){
+    if(payFrequency==='shed')return 0;
+    const dateDates=Object.keys(job.runs||{}).filter(d=>(job.runs[d]||[]).length>0).sort();
+    if(!dateDates.length)return 0;
+    const latestDate=dateDates[dateDates.length-1];
+    const latestPeriod=getPeriodForDate(latestDate,payDayOfWeek);
+    const basePeriod=getPeriodForDate(todayStr,payDayOfWeek);
+    const diffDays=(new Date(latestPeriod.start+'T00:00:00')-new Date(basePeriod.start+'T00:00:00'))/(1000*60*60*24);
+    return Math.round(diffDays/periodLen);
+  }
+
+  const [offset,setOffset]=useState(()=>findBestOffset());
+  const [view,setView]=useState('crew');
   const [copied,setCopied]=useState(false);
   const [copiedInv,setCopiedInv]=useState(false);
 
-  /* Period calc — null for end-of-shed */
   const period=payFrequency==='shed'?null:getPeriodByOffset(todayStr,payDayOfWeek,offset,payFrequency);
-  const periodLen=payFrequency==='fortnightly'?14:7;
   const isCurrentPeriod=offset===0;
   const isFuture=period&&period.start>todayStr;
   const stats=period?calcPeriodStats(job,period):{shorn:0,totalEarn:0};
   const crewText=generateSummary(job,period);
   const invText=generateFarmerInvoice(job);
-
   const copy=(txt,set)=>{navigator.clipboard.writeText(txt).then(()=>{set(true);setTimeout(()=>set(false),2000);}).catch(()=>{});};
-
-  /* Labels for navigation buttons */
   const freqLabel=payFrequency==='weekly'?'Weekly':payFrequency==='fortnightly'?'Fortnightly':'End of Shed';
   const prevStart=period?addDays(period.start,-periodLen):null;
   const nextStart=period?addDays(period.start,periodLen):null;
   const btnLabel=d=>{const [,mo,dy]=d.split('-').map(Number);const dt=new Date(d.split('-')[0],mo-1,dy);const dn=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];return dn[dt.getDay()]+' '+String(dy).padStart(2,'0')+'/'+String(mo).padStart(2,'0');};
-
-  /* Farmer invoice stats for header */
   const shIds=job.crew.filter(id=>gc(id)?.role==='Shearer');
   const totalJobShorn=Object.values(job.runs||{}).flat().flatMap(r=>mobsOf(r)).reduce((s,mob)=>s+shIds.reduce((a,id)=>a+(mob.counts[id]||0),0),0);
-  const totalDue=Object.values(job.runs||{}).flat().flatMap(r=>mobsOf(r)).reduce((s,mob)=>{
-    const cnt=shIds.reduce((a,id)=>a+(mob.counts[id]||0),0);
-    const r2=mob.rateOverride!=null?mob.rateOverride:(mob.type==='Shearing'?rates.farmerShearingRate||6.50:rates.farmerCrutchingRate||2.00);
-    return s+cnt*r2;
-  },0);
+  const totalDue=Object.values(job.runs||{}).flat().flatMap(r=>mobsOf(r)).reduce((s,mob)=>{const cnt=shIds.reduce((a,id)=>a+(mob.counts[id]||0),0);const r2=mob.rateOverride!=null?mob.rateOverride:(mob.type==='Shearing'?rates.farmerShearingRate||6.50:rates.farmerCrutchingRate||2.00);return s+cnt*r2;},0);
 
   return e('div',{className:'summary-wrap'},
     /* View toggle */
@@ -870,6 +896,36 @@ function AdminTab({job,setJob}){
     shearers.length>0&&e('div',{className:'admin-section'},e('div',{className:'admin-sec-hdr'},e('div',{className:'admin-sec-title'},'Shearer Rate Loadings'),e('div',{className:'admin-sec-sub'},'Added on top of base rate per head — entire job')),shearers.map(id=>{const c=gc(id);if(!c)return null;const cur=(rates.shearerLoadings||{})[id]||0;return e('div',{key:id,className:'loading-row'},e('div',{className:'lr-l'},e(Av,{name:c.name,size:32}),e('div',null,e('div',{className:'lr-name'},c.name),e('div',{className:'lr-role'},'Shearer'))),e('div',{className:'lr-r'},e('span',{className:'lr-prefix'},'+$'),e('input',{type:'number',className:'lr-inp',value:cur||'',placeholder:'0',step:'0.05',onChange:ev=>setLoad(id,ev.target.value)}),e('span',{className:'lr-unit'},'/head')));})),
     e('div',{className:'admin-section'},e('div',{className:'admin-sec-hdr'},e('div',{className:'admin-sec-title'},'Travel'),e('div',{className:'admin-sec-sub'},'Days × daily rate per person (used in pay summary)')),
       job.crew.map(id=>{const c=gc(id);if(!c)return null;const days=(rates.travelDays||{})[id]||'';const rate=(rates.travelRate||{})[id]||'';return e('div',{key:id,className:'loading-row'},e('div',{className:'lr-l'},e(Av,{name:c.name,size:32}),e('div',null,e('div',{className:'lr-name'},c.name),e('div',{className:'lr-role'},c.role))),e('div',{className:'lr-r',style:{gap:8}},e('span',{style:{display:'flex',alignItems:'center',gap:3}},e('input',{type:'number',className:'tr-inp',value:days,placeholder:'0',min:0,onChange:ev=>setTD(id,ev.target.value)}),e('span',{className:'tr-unit'},'days')),e('span',{style:{display:'flex',alignItems:'center',gap:3}},e('span',{className:'lr-prefix'},'$'),e('input',{type:'number',className:'tr-inp',style:{width:52},value:rate,placeholder:'40',step:'5',onChange:ev=>setTR(id,ev.target.value)}),e('span',{className:'tr-unit'},'/day'))));})
+    ),
+    e('div',{className:'admin-section'},
+      e('div',{className:'admin-sec-hdr'},e('div',{className:'admin-sec-title'},'Crew Details'),e('div',{className:'admin-sec-sub'},'Phone, vehicle, tax withholding & role for each crew member')),
+      job.crew.map(id=>{
+        const c=gc(id);if(!c)return null;
+        const det=(rates.crewDetails||{})[id]||{};
+        const setDet=(k,v)=>setJob(prev=>({...prev,rates:{...prev.rates,crewDetails:{...(prev.rates.crewDetails||{}),[id]:{...(prev.rates.crewDetails||{})[id],[k]:v}}}}));
+        const phone=det.phone!=null?det.phone:(c.phone||'');
+        const hasCar=det.hasVehicle!=null?det.hasVehicle:c.hasVehicle;
+        const taxRate=det.taxRate!=null?det.taxRate:'';
+        const role=det.role||c.role;
+        const ROLES=['Shearer','Crutcher','Wool Handler','Wool Classer','Presser','Penner'];
+        return e('div',{key:id,className:'crew-detail-row'},
+          e('div',{className:'cd-top'},
+            e(Av,{name:c.name,size:36}),
+            e('div',{className:'cd-name'},c.name),
+            e('button',{className:`cd-car-btn${hasCar?' on':''}`,onClick:()=>setDet('hasVehicle',!hasCar)},hasCar?'🚗 Has car':'🚗 No car')
+          ),
+          e('div',{className:'cd-fields'},
+            e('div',{className:'cd-field'},e('div',{className:'cd-lbl'},'Mobile'),e('input',{type:'tel',className:'cd-inp',placeholder:'04XX XXX XXX',value:phone,onChange:ev=>setDet('phone',ev.target.value)})),
+            e('div',{className:'cd-field'},e('div',{className:'cd-lbl'},'Role'),e('select',{className:'cd-role-sel',value:role,onChange:ev=>setDet('role',ev.target.value)},ROLES.map(r=>e('option',{key:r,value:r},r)))),
+            e('div',{className:'cd-field'},
+              e('div',{className:'cd-lbl'},'Tax Withholding %'),
+              e('input',{type:'number',className:'cd-inp',placeholder:'e.g. 19',value:taxRate,min:0,max:47,step:1,onChange:ev=>setDet('taxRate',ev.target.value)}),
+              taxRate&&e('div',{className:'tax-note'},'Net ≈ '+(100-parseFloat(taxRate||0)).toFixed(0)+'% of gross')
+            ),
+            e('div',{className:'cd-field'},e('div',{className:'cd-lbl'},'Tax Note'),e('div',{style:{fontSize:'11px',color:'var(--dim)',paddingTop:4,lineHeight:1.5}},'Applied to pay summary as deduction. Gross pay always shown separately.'))
+          )
+        );
+      })
     ),
     e('div',{className:'admin-section'},
       e('div',{className:'admin-sec-hdr'},e('div',{className:'admin-sec-title'},'Pay Settings'),e('div',{className:'admin-sec-sub'},'Crew pay cycle — controls how Summary tab filters pay periods')),
@@ -1000,7 +1056,7 @@ function SMSModal({job,onClose,onPreview}){
 }
 /* ── NEW JOB ── */
 function NewJobModal({onClose,onCreate}){
-  const [type,setType]=useState('Shearing'),[farmId,setFarmId]=useState(''),[startDate,setStartDate]=useState(''),[days,setDays]=useState(''),[sheep,setSheep]=useState(''),[evos,setEvos]=useState('BYO'),[transport,setTransport]=useState(true),[accomm,setAccomm]=useState(''),[notes,setNotes]=useState(''),[selCrew,setSelCrew]=useState([]);
+  const [type,setType]=useState('Shearing'),[farmId,setFarmId]=useState(''),[startDate,setStartDate]=useState(localToday()),[days,setDays]=useState(''),[sheep,setSheep]=useState(''),[evos,setEvos]=useState('BYO'),[transport,setTransport]=useState(true),[accomm,setAccomm]=useState(''),[notes,setNotes]=useState(''),[selCrew,setSelCrew]=useState([]);
   const tog=id=>setSelCrew(p=>p.includes(id)?p.filter(x=>x!==id):[...p,id]);
   const ok=farmId&&startDate&&days&&sheep&&selCrew.length>0;
   const doCreate=()=>{if(!ok)return;onCreate({id:'j'+Date.now(),jobNumber:String(Math.floor(2104+Math.random()*50)).padStart(6,'0'),farmId,type,notes_job:notes,startDate,daysAllocated:parseInt(days),totalSheep:parseInt(sheep),evos,crutchingTrailer:false,transport,accommodation:accomm,status:'Active',crew:selCrew,rates:mkRates(),runs:{},shedTallies:{},baleTallies:{},baleBF:{},dayNotes:{}});};
